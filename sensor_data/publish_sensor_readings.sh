@@ -1,4 +1,7 @@
 #!/bin/bash
+# Run from any directory: cd to this script's folder and use the mlops_demo uv environment
+cd "$(dirname "$0")" || exit 1
+
 wait_for_more() {
   while true; do
     read -p "Type 'more' to publish 500 more readings: " input
@@ -9,10 +12,10 @@ wait_for_more() {
 }
 
 wait_for_more
-python publish_sensor_readings.py --num-records 500 --offset 0
+uv run --project ../mlops_demo python publish_sensor_readings.py --num-records 500 --offset 0
 wait_for_more
-python publish_sensor_readings.py --num-records 500 --offset 500
+uv run --project ../mlops_demo python publish_sensor_readings.py --num-records 500 --offset 500
 wait_for_more
-python publish_sensor_readings.py --num-records 500 --offset 1000
+uv run --project ../mlops_demo python publish_sensor_readings.py --num-records 500 --offset 1000
 wait_for_more
-python publish_sensor_readings.py --num-records 500 --offset 1500
+uv run --project ../mlops_demo python publish_sensor_readings.py --num-records 500 --offset 1500

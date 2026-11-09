@@ -11,30 +11,34 @@ This is new data that we can use to improve the model, and thus it makes perfect
 
 ## How to use
 
+### Prerequisites
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) for Python and dependency management (it installs a compatible Python for you if needed)
+- [Docker](https://docs.docker.com/get-docker/) to run RabbitMQ
+
 ### Install Python dependencies
-First, install all necessary packages by running
+Clone the repo and install all dependencies (Dagster 1.13, scikit-learn, polars, etc.) into a virtual environment at `mlops_demo/.venv`:
 ```
-pipenv sync
+git clone <this-repo-url> mlops-demo
+cd mlops-demo/mlops_demo
+uv sync
 ```
-If you don't have `pipenv` you can use the `requirements.txt` file.
 
 ### Start RabbitMQ
 Sensor readings and daily machine statuses are simulated using a RabbitMQ queue.
-To start RabbitMQ run
+From the repository root, start RabbitMQ by running
 ```
 docker compose up
 ```
+The RabbitMQ management UI is available at http://localhost:15672 (user/password: `guest`/`guest`).
 
 ### Start Dagster
-Now, to get Dagster running first activate the virtual environment by running
+In a new terminal, run
 ```
-pipenv shell
-```
-Next, run
-```
-cd mlops_demo && dagster dev
+cd mlops_demo && uv run dg dev
 ```
 Dagster will start and should be accessible on http://127.0.0.1:3000 within a few seconds.
+`uv run` uses the project's virtual environment automatically, so there is no need to activate it.
+To check that everything loads correctly without starting the UI, you can run `uv run dg check defs`.
 
 1. Verify that the sensors are running by going to "Automation" and choosing `min_number_of_readings_sensor`. It should look something like the image below.
 1. Activate the `default_automation_condition_sensor`.
@@ -43,22 +47,28 @@ Dagster will start and should be accessible on http://127.0.0.1:3000 within a fe
 
 
 ### Start publising readings
-Now we are ready to start receiving sensor readings and daily machine statuses. To do this, go to the folder `sensor_data`.
+Now we are ready to start receiving sensor readings and daily machine statuses. In a third terminal, go to the folder `sensor_data`.
 ```
 cd sensor_data
 ```
-To publish sensor readings, run the script `publish_sensor_readings.sh` (you can also use the Python script for more customization possibilities)
+To publish sensor readings, run the script `publish_sensor_readings.sh`
 ```
 ./publish_sensor_readings.sh
 ```
+The `.sh` scripts are interactive wrappers around the Python scripts `publish_sensor_readings.py` and `publish_machine_statuses.py`, which do the actual publishing.
+They run the Python scripts through `uv run --project ../mlops_demo`, so they use the same environment as Dagster (`pika`, `polars`) and work from any directory.
+For more control (e.g. a different number of records, an offset, or a delay between messages with `--period`), call the Python scripts directly:
+```
+uv run --project ../mlops_demo python publish_sensor_readings.py --num-records 100 --offset 0 --period 0.1
+```
 The script will wait for you to type `more` before anything is published. Each time you type `more`, 500 messages are sent. For now, type `more` once to publish just 500 readings.
-Watch how Dagster starts materializing the assets `sensor_readings`, `cleaned_readings`, and `historic_readings`. 
-When Dagster has finished, the file `cleaned_readings.json` (the "database") will contain 500 messages.
+Watch how Dagster starts materializing the assets `sensor_readings`, `cleaned_readings`, and `historical_readings`. 
+When Dagster has finished, the file `mlops_demo/cleaned_readings.jsonl` (the "database") will contain 500 messages.
 
 Type `more` one more time to publish 500 more readings. 
 
 ### Publish daily machine statuses
-To pubslish the daily machine statuses you can use the script `publish_machine_statuses.sh` in the same manner.
+To publish the daily machine statuses you can use the script `publish_machine_statuses.sh` in the same manner.
 
 Now publish 500 statuses.
 
@@ -108,8 +118,8 @@ Now deploy the new model and watch how the "devices at risk" list changes.
 To reset everything do the following
 
 1. Stop Dagster (Ctrl+C)
-1. Delete the files `cleaned_daily_statuses.jsonl` and `cleaned_readings.jsonl`.
-1. Delete the contents of the folder `trained-models`.
+1. Delete the files `mlops_demo/cleaned_daily_statuses.jsonl` and `mlops_demo/cleaned_readings.jsonl`.
+1. Delete the `.pickle` files in the folder `mlops_demo/trained-models` and empty `mlops_demo/trained-models/list-of-models.txt`.
 1. Empty the RabbitMQ queues (if you always publish minimum 500 messages, this should not be necessary as Dagster will empty the queues entirely).
 ```
 docker exec rabbitmq rabbitmqctl purge_queue daily_statuses

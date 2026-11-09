@@ -4,3 +4,5 @@
 **/cleaned_readings.jsonl
 **/trained-models/model*
 .DS_Store
+.claude
+**/.venv

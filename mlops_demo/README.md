@@ -1,47 +1,62 @@
 # mlops_demo
 
-This is a [Dagster](https://dagster.io/) project scaffolded with [`dagster project scaffold`](https://docs.dagster.io/guides/build/projects/creating-a-new-project).
+The [Dagster](https://dagster.io/) project for the MLOps demo. See the [README in the repository root](../README.md) for the full walkthrough.
 
 ## Getting started
 
-First, install your Dagster code location as a Python package. By using the --editable flag, pip will install your Python package in ["editable mode"](https://pip.pypa.io/en/latest/topics/local-project-installs/#editable-installs) so that as you develop, local code changes will automatically apply.
+Install dependencies with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-pip install -e ".[dev]"
+uv sync
 ```
 
-Then, start the Dagster UI web server:
+Then start the Dagster UI and daemon:
 
 ```bash
-dagster dev
+uv run dg dev
 ```
 
 Open http://localhost:3000 with your browser to see the project.
 
-You can start writing assets in `mlops_demo/assets.py`. The assets are automatically loaded into the Dagster code location as you define them.
+## Project layout
+
+Definitions are loaded from `mlops_demo/definitions.py`:
+
+- `ingestion.py`: assets that read from RabbitMQ, plus the sensors that trigger ingestion
+- `training.py`: the training dataset, the model and its model card, plus the training job and schedule
+- `deployment.py`: model candidates and the deployed model
+- `inference.py`: devices at risk, predicted with the deployed model
+- `resources.py`: the RabbitMQ connection resource
 
 ## Development
 
 ### Adding new Python dependencies
 
-You can specify new Python dependencies in `setup.py`.
+```bash
+uv add <package>
+```
+
+### Validating definitions
+
+```bash
+uv run dg check defs
+uv run dg list defs
+```
 
 ### Unit testing
 
-Tests are in the `mlops_demo_tests` directory and you can run tests using `pytest`:
+Tests are in the `mlops_demo_tests` directory and you can run them using `pytest`:
 
 ```bash
-pytest mlops_demo_tests
+uv run pytest mlops_demo_tests
+```
+
+### Model card docs
+
+```bash
+uv run mkdocs serve
 ```
 
 ### Schedules and sensors
 
-If you want to enable Dagster [Schedules](https://docs.dagster.io/guides/automate/schedules/) or [Sensors](https://docs.dagster.io/guides/automate/sensors/) for your jobs, the [Dagster Daemon](https://docs.dagster.io/guides/deploy/execution/dagster-daemon) process must be running. This is done automatically when you run `dagster dev`.
-
-Once your Dagster Daemon is running, you can start turning on schedules and sensors for your jobs.
-
-## Deploy on Dagster+
-
-The easiest way to deploy your Dagster project is to use Dagster+.
-
-Check out the [Dagster+ documentation](https://docs.dagster.io/dagster-plus/) to learn more.
+Schedules and sensors need the [Dagster Daemon](https://docs.dagster.io/guides/deploy/execution/dagster-daemon), which `dg dev` starts automatically.

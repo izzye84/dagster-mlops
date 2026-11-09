@@ -7,11 +7,11 @@ help:
 
 # build documentation for Model Cards
 build-modelcard:
-    mkdocs build
+    uv run mkdocs build
 
 # locally serve the Model Cards
 serve-modelcard:
-    mkdocs serve
+    uv run mkdocs serve
 
 # start database
 run-rabbitmq:
@@ -19,4 +19,4 @@ run-rabbitmq:
 
 # start dagster in dev
 run-dagster-dev:
-    pipenv run dagster dev
+    uv run dg dev

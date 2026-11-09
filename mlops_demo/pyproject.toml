@@ -1,27 +1,40 @@
 [project]
 name = "mlops_demo"
 version = "0.1.0"
-description = "Add your description here"
+description = "A demonstration of how to use Dagster for machine-learning operations"
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.10,<3.15"
 dependencies = [
-    "dagster",
-    "dagster-cloud",
+    "dagster==1.13.29",
+    "modelcards",
+    "pandas",
+    "pika",
+    "polars",
+    "pyarrow",
+    "scikit-learn",
+    "tabulate",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "dagster-webserver", 
+    "dagster-dg-cli",
+    "dagster-webserver",
+    "mkdocs",
     "pytest",
 ]
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.dagster]
-module_name = "mlops_demo.definitions"
+[tool.hatch.build.targets.wheel]
+packages = ["mlops_demo"]
+force-include = { "pyproject.toml" = "pyproject.toml" }
+
+[tool.dg]
+directory_type = "project"
+
+[tool.dg.project]
+root_module = "mlops_demo"
+code_location_target_module = "mlops_demo.definitions"
 code_location_name = "mlops_demo"
-
-[tool.setuptools.packages.find]
-exclude=["mlops_demo_tests"]
